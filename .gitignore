@@ -1,0 +1,32 @@
+# Секреты
+/.env
+/laravel/.env
+
+# Зависимости
+/laravel/vendor/
+/laravel/node_modules/
+**/__pycache__/
+*.pyc
+/fastapi/.venv/
+/fastapi/venv/
+
+# Сборка фронта
+/laravel/public/build/
+*.map
+
+# Laravel runtime
+/laravel/storage/*.key
+/laravel/storage/logs/*
+/laravel/storage/framework/cache/*
+/laravel/storage/framework/sessions/*
+/laravel/storage/framework/views/*
+/laravel/bootstrap/cache/*.php
+
+# Сертификаты (генерируются локально)
+/nginx/certs/*.key
+/nginx/certs/*.crt
+
+# Прочее
+.DS_Store
+*.log
+/fastapi/*.key
