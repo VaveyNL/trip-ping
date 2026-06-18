@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Boardy — вход…</title>
+    <title>TripPing — вход…</title>
 </head>
 <body>
     <p style="font-family: sans-serif; padding: 40px;">Завершаем вход…</p>

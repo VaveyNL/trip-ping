@@ -2,7 +2,7 @@
 <html lang="ru">
 <head><meta charset="utf-8"><title>Авторизация</title></head>
 <body style="font-family:sans-serif;max-width:480px;margin:80px auto;">
-    <h2>Boardy SPA запрашивает доступ</h2>
+    <h2>TripPing SPA запрашивает доступ</h2>
     <p>Приложение <b>{{ $client->name }}</b> хочет получить доступ к вашему аккаунту.</p>
 
     <form method="post" action="/oauth/authorize">

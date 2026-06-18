@@ -11,7 +11,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\App\Http\Middleware\RefreshTokenCookie::class);
         $middleware->encryptCookies(except: ['refresh_token']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
