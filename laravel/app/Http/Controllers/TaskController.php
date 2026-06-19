@@ -21,20 +21,23 @@ class TaskController extends Controller
             'title'      => $data['title'],
             'created_by' => auth()->id(),
         ]);
+        $task->refresh();
 
         Redis::publish('task.added', json_encode([
             'trip_id' => $trip->id,
             'task'    => [
                 'id'      => $task->id,
                 'title'   => $task->title,
-                'is_done' => $task->is_done,
+                'is_done' => (bool) $task->is_done,
             ],
         ]));
 
-        return back();
+        return $request->expectsJson()
+            ? response()->json(['ok' => true], 201)
+            : back();
     }
 
-    public function toggle(Task $task)
+    public function toggle(Request $request, Task $task)
     {
         $this->authorize('view', $task->trip);
 
@@ -44,14 +47,16 @@ class TaskController extends Controller
             'trip_id' => $task->trip_id,
             'task'    => [
                 'id'      => $task->id,
-                'is_done' => $task->is_done,
+                'is_done' => (bool) $task->is_done,
             ],
         ]));
 
-        return back();
+        return $request->expectsJson()
+            ? response()->json(['ok' => true])
+            : back();
     }
 
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
         $this->authorize('view', $task->trip);
 
@@ -64,6 +69,8 @@ class TaskController extends Controller
             'task_id' => $taskId,
         ]));
 
-        return back();
+        return $request->expectsJson()
+            ? response()->json(['ok' => true])
+            : back();
     }
 }
