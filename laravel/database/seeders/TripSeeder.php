@@ -16,19 +16,24 @@ class TripSeeder extends Seeder
             ['email' => 'owner@trip.local'],
             ['name' => 'Владимир', 'password' => 'password']
         );
-        $friend = User::firstOrCreate(
-            ['email' => 'friend@trip.local'],
-            ['name' => 'Аня', 'password' => 'password']
+        $alina = User::firstOrCreate(
+            ['email' => 'alina@trip.local'],
+            ['name' => 'Алина', 'password' => 'password']
+        );
+        $alexey = User::firstOrCreate(
+            ['email' => 'alexey@trip.local'],
+            ['name' => 'Алексей', 'password' => 'password']
         );
 
-        // Две поездки во владении owner.
-        $trips = Trip::factory()->count(2)->create(['owner_id' => $owner->id]);
+        // Поездки во владении owner (поменяй число, если хочешь больше/меньше).
+        $trips = Trip::factory()->count(4)->create(['owner_id' => $owner->id]);
 
         foreach ($trips as $trip) {
-            // Участники: владелец + друг.
+            // Участники: владелец + Алина + Алексей.
             $trip->participants()->syncWithoutDetaching([
                 $owner->id  => ['role' => 'owner'],
-                $friend->id => ['role' => 'member'],
+                $alina->id  => ['role' => 'member'],
+                $alexey->id => ['role' => 'member'],
             ]);
 
             // По 5 задач на поездку.
