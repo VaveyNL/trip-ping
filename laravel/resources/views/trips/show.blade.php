@@ -30,10 +30,18 @@
             </div>
         </div>
 
-        <div class="card shadow-sm">
+        <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div id="checklist-root">
                     <p class="text-muted">Загрузка чек-листа…</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div id="chat-root">
+                    <p class="text-muted">Загрузка чата…</p>
                 </div>
             </div>
         </div>
@@ -43,6 +51,7 @@
         <script>
             window.TRIP_ID = {{ $trip->id }};
             window.CSRF_TOKEN = "{{ csrf_token() }}";
+            window.USER_NAME = "{{ auth()->user()->name }}";
             window.INITIAL_TASKS = {!! $trip->tasks->map(fn ($t) => ['id' => $t->id, 'title' => $t->title, 'is_done' => (bool) $t->is_done])->toJson() !!};
         </script>
         <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -134,7 +143,61 @@
                 );
             }
 
+            function Chat() {
+                const tripId = window.TRIP_ID;
+                const userName = window.USER_NAME;
+                const [messages, setMessages] = useState([]);
+                const [text, setText] = useState('');
+
+                useEffect(function () {
+                    fetch('/api/trips/' + tripId + '/messages')
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) { setMessages(data.messages || []); })
+                        .catch(function () {});
+
+                    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+                    const sock = new WebSocket(proto + '://' + location.host + '/ws');
+                    sock.onmessage = function (ev) {
+                        const msg = JSON.parse(ev.data);
+                        if (msg.event === 'message.created' && msg.trip_id === tripId) {
+                            setMessages(function (prev) { return prev.concat([msg.message]); });
+                        }
+                    };
+                    return function () { sock.close(); };
+                }, []);
+
+                function send(ev) {
+                    ev.preventDefault();
+                    if (!text.trim()) return;
+                    fetch('/api/trips/' + tripId + '/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_name: userName, body: text }),
+                    });
+                    setText('');
+                }
+
+                const rows = messages.map(function (m) {
+                    return e('div', { key: m.id, className: 'mb-2' },
+                        e('span', { className: 'fw-semibold' }, m.user_name + ': '),
+                        e('span', null, m.body)
+                    );
+                });
+
+                return e('div', null,
+                    e('h5', { className: 'mb-3' }, 'Чат поездки'),
+                    e('div', { className: 'border rounded p-3 mb-3', style: { height: '240px', overflowY: 'auto', background: '#fff' } },
+                        messages.length ? rows : e('p', { className: 'text-muted mb-0' }, 'Сообщений пока нет')
+                    ),
+                    e('form', { onSubmit: send, className: 'd-flex gap-2' },
+                        e('input', { className: 'form-control', placeholder: 'Сообщение…', value: text, onChange: function (ev) { setText(ev.target.value); } }),
+                        e('button', { className: 'btn btn-primary', type: 'submit' }, 'Отправить')
+                    )
+                );
+            }
+
             ReactDOM.createRoot(document.getElementById('checklist-root')).render(e(Checklist));
+            ReactDOM.createRoot(document.getElementById('chat-root')).render(e(Chat));
         </script>
         @endverbatim
     @endpush
