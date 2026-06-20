@@ -7,7 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as aioredis
 
-from routers import trips, ws
+from database import get_db
+from routers import trips, ws, messages
 
 REDIS_URL = os.environ.get(
     'REDIS_URL',
@@ -15,8 +16,26 @@ REDIS_URL = os.environ.get(
 )
 
 
+async def init_messages_table():
+    # Таблица сообщений чата
+    conn = await get_db()
+    try:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                'CREATE TABLE IF NOT EXISTS messages ('
+                'id INT AUTO_INCREMENT PRIMARY KEY, '
+                'trip_id INT NOT NULL, '
+                'user_name VARCHAR(255) NOT NULL, '
+                'body TEXT NOT NULL, '
+                'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, '
+                'INDEX idx_trip (trip_id))'
+            )
+            await conn.commit()
+    finally:
+        conn.close()
+
+
 async def redis_subscriber():
-    # Слушает Redis и пробрасывает события задач всем по WebSocket.
     r = aioredis.from_url(REDIS_URL)
     pubsub = r.pubsub()
     await pubsub.subscribe('task.added', 'task.toggled', 'task.deleted')
@@ -27,7 +46,6 @@ async def redis_subscriber():
             continue
         channel = message['channel'].decode()
         data = json.loads(message['data'])
-
         payload = {'event': channel}
         payload.update(data)
         await ws.manager.broadcast(payload)
@@ -35,6 +53,7 @@ async def redis_subscriber():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await init_messages_table()
     task = asyncio.create_task(redis_subscriber())
     yield
     task.cancel()
@@ -51,6 +70,7 @@ app.add_middleware(
 )
 
 app.include_router(trips.router)
+app.include_router(messages.router)
 app.include_router(ws.router)
 
 
