@@ -29,6 +29,6 @@ class GitHubController extends Controller
 
         Auth::login($user, remember: true);
 
-        return redirect()->route('posts.index');
+        return redirect()->route('dashboard');
     }
 }
