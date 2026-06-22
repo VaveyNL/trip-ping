@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Trip;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -40,6 +41,7 @@ class TripController extends Controller
     public function show(Trip $trip)
     {
         $this->authorize('view', $trip);
+
         $trip->load(['tasks' => fn ($q) => $q->latest(), 'participants']);
 
         return view('trips.show', compact('trip'));
@@ -64,9 +66,32 @@ class TripController extends Controller
     public function destroy(Trip $trip)
     {
         $this->authorize('delete', $trip);
+
         $trip->delete();
 
         return redirect()->route('trips.index')->with('status', 'Поездка удалена');
+    }
+
+    // Добавить участника по email (только владелец)
+    public function addParticipant(Request $request, Trip $trip)
+    {
+        $this->authorize('update', $trip);
+
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (! $user) {
+            return back()->with('status', 'Пользователь с таким email не найден');
+        }
+
+        $trip->participants()->syncWithoutDetaching([
+            $user->id => ['role' => 'member'],
+        ]);
+
+        return back()->with('status', 'Участник добавлен: ' . $user->name);
     }
 
     // Общая валидация для store/update

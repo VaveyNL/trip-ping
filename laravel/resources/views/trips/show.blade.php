@@ -20,13 +20,25 @@
                 <div class="text-muted small">
                     {{ $trip->destination }}
                     @if ($trip->start_date)
-                        · {{ $trip->start_date->format('d.m.Y') }}–{{ $trip->end_date?->format('d.m.Y') }}
+                        · {{ $trip->start_date->format('d.m.Y') }}-{{ $trip->end_date?->format('d.m.Y') }}
                     @endif
                 </div>
                 @if ($trip->description)
                     <p class="mt-2 mb-0">{{ $trip->description }}</p>
                 @endif
                 <div class="mt-2 small text-secondary">Участники: {{ $trip->participants->pluck('name')->join(', ') }}</div>
+
+                @if (session('status'))
+                    <div class="alert alert-info mt-3 mb-0 py-2">{{ session('status') }}</div>
+                @endif
+
+                @can('update', $trip)
+                    <form method="POST" action="{{ route('trips.participants.add', $trip) }}" class="d-flex gap-2 mt-3">
+                        @csrf
+                        <input type="email" name="email" placeholder="email участника" required class="form-control form-control-sm">
+                        <button class="btn btn-outline-primary btn-sm text-nowrap">Добавить участника</button>
+                    </form>
+                @endcan
             </div>
         </div>
 
